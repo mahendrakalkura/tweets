@@ -1,12 +1,10 @@
+[proxies]
+hostname = "..."
+ports = [..., ...]
+
 [sqlx]
 database = "tweettv"
 hostname = "0.0.0.0"
 password = "..."
 port = "5432"
 username = "..."
-
-[twitter]
-consumer_key = "..."
-consumer_secret = "..."
-access_key = "..."
-access_secret = "..."
