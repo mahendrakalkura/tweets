@@ -12,10 +12,9 @@ import (
 func rest_api(settings *Settings, database *sqlx.DB) {
 	fmt.Println("rest_api() - Start")
 
-	channels_program_and_max_position := make(chan ProgramAndMaxPosition)
+	channels_program_and_max_position := make(chan ProgramAndMaxPosition, 128)
 	channels_screen_name := make(chan string)
 	channels_signal := make(chan os.Signal)
-	channels_exit := make(chan bool)
 
 	for index := 1; index <= 64; index++ {
 		go rest_api_consumer_tweets(settings, database, channels_program_and_max_position, channels_screen_name)
@@ -41,10 +40,6 @@ func rest_api(settings *Settings, database *sqlx.DB) {
 	close(channels_program_and_max_position)
 	close(channels_screen_name)
 
-	channels_exit <- true
-
-	<-channels_exit
-
 	fmt.Println("rest_api() - Stop")
 }
 
@@ -57,14 +52,14 @@ func rest_api_consumer_tweets(
 	fmt.Println("rest_api_consumer_tweets() - Start")
 
 	for program_and_max_position := range channels_program_and_max_position {
-		if has_stopped(program_and_max_position.Program) {
+		if has_stopped(&program_and_max_position.Program) {
 			continue
 		}
-		tweets, max_position := get_tweets(
+		tweets, max_position := tweets_fetch(
 			settings, program_and_max_position.Program.Query, program_and_max_position.MaxPosition,
 		)
 		for _, tweet := range tweets {
-			go rest_api_set_tweet(database, tweet, channels_screen_name)
+			go rest_api_tweet_insert(database, tweet, channels_screen_name)
 		}
 		if max_position != "" {
 			var program_and_max_position = ProgramAndMaxPosition{
@@ -82,8 +77,21 @@ func rest_api_consumer_tweeters(settings *Settings, database *sqlx.DB, channels_
 	fmt.Println("rest_api_consumer_tweeters() - Start")
 
 	for screen_name := range channels_screen_name {
-		tweeter := get_tweeters(settings, screen_name)
-		go set_tweeter(database, &tweeter)
+		continue
+		tweeter := tweeter_fetch(settings, screen_name)
+		if &tweeter.Tweets == nil {
+			continue
+		}
+		if &tweeter.Followers == nil {
+			continue
+		}
+		if &tweeter.Following == nil {
+			continue
+		}
+		if &tweeter.CreatedAt == nil {
+			continue
+		}
+		go tweeter_update(database, tweeter)
 	}
 
 	fmt.Println("rest_api_consumer_tweeters() - Stop")
@@ -96,7 +104,7 @@ func rest_api_producer(
 ) {
 	fmt.Println("rest_api_producer() - Start")
 
-	programs := get_programs(database)
+	programs := programs_select(database)
 	for _, program := range programs {
 		var program_and_max_position = ProgramAndMaxPosition{
 			Program:     program,
@@ -105,7 +113,7 @@ func rest_api_producer(
 		channels_program_and_max_position <- program_and_max_position
 	}
 
-	screen_names := get_screen_names(database)
+	screen_names := screen_names_select(database)
 	for _, screen_name := range screen_names {
 		channels_screen_name <- screen_name
 	}
@@ -113,11 +121,11 @@ func rest_api_producer(
 	fmt.Println("rest_api_producer() - Stop")
 }
 
-func rest_api_set_tweet(database *sqlx.DB, tweet Tweet, channels_screen_name chan string) {
-	set_tweet(database, &tweet)
-	tweeter, err := get_tweeter(database, tweet.UserScreenName)
+func rest_api_tweet_insert(database *sqlx.DB, tweet Tweet, channels_screen_name chan string) {
+	tweet_insert(database, &tweet)
+	tweeter, err := tweeter_select(database, tweet.UserScreenName)
 	if err == nil {
-		set_tweeter(database, tweeter)
+		tweeter_update(database, tweeter)
 	} else {
 		channels_screen_name <- tweet.UserScreenName
 	}

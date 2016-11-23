@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/BurntSushi/toml"
+	"github.com/dghubble/go-twitter/twitter"
+	"github.com/dghubble/oauth1"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"math/rand"
@@ -45,6 +47,12 @@ func get_http_client(settings *Settings, with_proxy bool) *http.Client {
 	return client
 }
 
+func get_number(value string) string {
+	re := regexp.MustCompile("[^0-9]")
+	value = re.ReplaceAllString(value, "")
+	return value
+}
+
 func get_proxy(hostname string, ports []int) string {
 	port := get_random_number(ports[0], ports[1]+1)
 	return fmt.Sprintf("https://%s:%d", hostname, port)
@@ -73,7 +81,7 @@ func get_timestamp_from_integer(value string) time.Time {
 	return timestamp
 }
 
-func get_timestamp_from_string(value string) time.Time {
+func get_timestamp_from_string_1(value string) time.Time {
 	timestamp, err := time.Parse(time.RubyDate, value)
 	if err != nil {
 		panic(err)
@@ -81,16 +89,28 @@ func get_timestamp_from_string(value string) time.Time {
 	return timestamp
 }
 
+func get_timestamp_from_string_2(value string) time.Time {
+	var timestamp time.Time
+	var err error
+
+	timestamp, err = time.Parse("3:04 PM - 2 Jan 2006", value)
+	if err == nil {
+		return timestamp
+	}
+
+	timestamp, err = time.Parse("15:04 - 2. Jan. 2006", value)
+	if err == nil {
+		return timestamp
+	}
+
+	return time.Now().UTC()
+}
+
 func get_track(programs []Program) []string {
 	var track []string
-
-	var re *regexp.Regexp
-	var matches []string
-
-	re = regexp.MustCompile("\\w+")
-
+	re := regexp.MustCompile("\\w+")
 	for _, program := range programs {
-		matches = re.FindAllString(program.Query, -1)
+		matches := re.FindAllString(program.Query, -1)
 		for _, match := range matches {
 			if len(match) < 3 {
 				continue
@@ -104,25 +124,41 @@ func get_track(programs []Program) []string {
 			track = append(track, match)
 		}
 	}
-
 	sort.Sort(ByLengthAndValue(track))
-
 	if len(track) > 400 {
 		track = track[0:400]
 	}
-
 	return track
 }
 
-func has_stopped(program Program) bool {
+func get_twitter_client(
+	consumer_key string, consumer_secret string, access_key string, access_secret string,
+) *twitter.Client {
+	oauth1_config := oauth1.NewConfig(consumer_key, consumer_secret)
+	oauth1_token := oauth1.NewToken(access_key, access_secret)
+	oauth1_client := oauth1_config.Client(oauth1.NoContext, oauth1_token)
+
+	client := twitter.NewClient(oauth1_client)
+
+	return client
+}
+
+func get_twitter_parameters(track []string) *twitter.StreamFilterParams {
+	parameters := &twitter.StreamFilterParams{
+		Track: track,
+	}
+	return parameters
+}
+
+func has_stopped(program *Program) bool {
 	now := time.Now().UTC()
 	if now.Before(program.BeginningAt) {
-		return false
+		return true
 	}
 	if now.After(program.EndingAt) {
-		return false
+		return true
 	}
-	return true
+	return false
 }
 
 func in_array(value string, array []string) bool {

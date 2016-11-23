@@ -4,6 +4,42 @@ import (
 	"time"
 )
 
+type ByLengthAndValue []string
+
+func (items ByLengthAndValue) Len() int {
+	return len(items)
+}
+
+func (items ByLengthAndValue) Swap(one int, two int) {
+	items[one], items[two] = items[two], items[one]
+}
+
+func (items ByLengthAndValue) Less(one, two int) bool {
+	if len(items[one]) < len(items[two]) {
+		return true
+	}
+	if len(items[one]) > len(items[two]) {
+		return false
+	}
+	return items[one] < items[two]
+}
+
+type ItemsAndMaxPosition struct {
+	Items       string `json:"items_html"`
+	MaxPosition string `json:"min_position"`
+}
+
+type Program struct {
+	Query       string    `db:"query"`
+	BeginningAt time.Time `db:"beginning_at"`
+	EndingAt    time.Time `db:"ending_at"`
+}
+
+type ProgramAndMaxPosition struct {
+	Program     Program
+	MaxPosition string
+}
+
 type Settings struct {
 	Proxies SettingsProxies `toml:"proxies"`
 	SQLX    SettingsSQLX    `toml:"sqlx"`
@@ -30,30 +66,6 @@ type SettingsTwitter struct {
 	AccessSecret   string `toml:"access_secret"`
 }
 
-type Program struct {
-	Query       string    `db:"query"`
-	BeginningAt time.Time `db:"beginning_at"`
-	EndingAt    time.Time `db:"ending_at"`
-}
-
-type ProgramAndMaxPosition struct {
-	Program     Program
-	MaxPosition string
-}
-
-type ItemsAndMaxPosition struct {
-	Items       string `json:"items_html"`
-	MaxPosition string `json:"min_position"`
-}
-
-type Tweeter struct {
-	ScreenName string    `db:"twitter_user_screen_name"`
-	Tweets     int       `db:"twitter_user_tweets"`
-	Followers  int       `db:"twitter_user_followers"`
-	Following  int       `db:"twitter_user_following"`
-	CreatedAt  time.Time `db:"twitter_user_created_at"`
-}
-
 type Tweet struct {
 	Id                  string     `db:"twitter_id"`
 	Text                string     `db:"twitter_text"`
@@ -69,22 +81,10 @@ type Tweet struct {
 	UserCreatedAt       *time.Time `db:"twitter_user_created_at"`
 }
 
-type ByLengthAndValue []string
-
-func (items ByLengthAndValue) Len() int {
-	return len(items)
-}
-
-func (items ByLengthAndValue) Swap(one int, two int) {
-	items[one], items[two] = items[two], items[one]
-}
-
-func (items ByLengthAndValue) Less(one, two int) bool {
-	if len(items[one]) < len(items[two]) {
-		return true
-	}
-	if len(items[one]) > len(items[two]) {
-		return false
-	}
-	return items[one] < items[two]
+type Tweeter struct {
+	ScreenName string    `db:"twitter_user_screen_name"`
+	Tweets     int       `db:"twitter_user_tweets"`
+	Followers  int       `db:"twitter_user_followers"`
+	Following  int       `db:"twitter_user_following"`
+	CreatedAt  time.Time `db:"twitter_user_created_at"`
 }

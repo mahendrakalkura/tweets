@@ -3,36 +3,99 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dghubble/go-twitter/twitter"
-	"github.com/dghubble/oauth1"
 	"gopkg.in/xmlpath.v2"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 )
 
-func get_twitter_client(
-	consumer_key string, consumer_secret string, access_key string, access_secret string,
-) *twitter.Client {
-	oauth1_config := oauth1.NewConfig(consumer_key, consumer_secret)
-	oauth1_token := oauth1.NewToken(access_key, access_secret)
-	oauth1_client := oauth1_config.Client(oauth1.NoContext, oauth1_token)
+func tweeter_fetch(settings *Settings, screen_name string) *Tweeter {
+	tweeter := &Tweeter{}
 
-	client := twitter.NewClient(oauth1_client)
+	var err error
 
-	return client
-}
+	client := get_http_client(settings, true)
 
-func get_twitter_parameters(track []string) *twitter.StreamFilterParams {
-	parameters := &twitter.StreamFilterParams{
-		Track: track,
+	url := fmt.Sprintf("https://twitter.com/%s", screen_name)
+
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
 	}
-	return parameters
+
+	response, err := client.Do(request)
+	if err != nil {
+		panic(err)
+	}
+	defer response.Body.Close()
+
+	body_bytes, err := ioutil.ReadAll(response.Body)
+
+	body_string := string(body_bytes)
+
+	reader := strings.NewReader(body_string)
+	root, err := xmlpath.ParseHTML(reader)
+	if err != nil {
+		panic(err)
+	}
+
+	var path string
+	var xpath *xmlpath.Path
+	var value string
+	var ok bool
+	var integer int
+
+	tweeter.ScreenName = screen_name
+
+	path = `//li[contains(@class, "ProfileNav-item--tweets")]/a/@title`
+	xpath = xmlpath.MustCompile(path)
+	value, ok = xpath.String(root)
+	if ok {
+		value = get_number(value)
+		integer, err = strconv.Atoi(value)
+		if err != nil {
+			panic(err)
+		}
+		tweeter.Tweets = integer
+	}
+
+	path = `//li[contains(@class, "ProfileNav-item--followers")]/a/@title`
+	xpath = xmlpath.MustCompile(path)
+	value, ok = xpath.String(root)
+	if ok {
+		value = get_number(value)
+		integer, err = strconv.Atoi(value)
+		if err != nil {
+			panic(err)
+		}
+		tweeter.Followers = integer
+	}
+
+	path = `//li[contains(@class, "ProfileNav-item--following")]/a/@title`
+	xpath = xmlpath.MustCompile(path)
+	value, ok = xpath.String(root)
+	if ok {
+		value = get_number(value)
+		integer, err = strconv.Atoi(value)
+		if err != nil {
+			panic(err)
+		}
+		tweeter.Following = integer
+	}
+
+	path = `//span[contains(@class, "ProfileHeaderCard-joinDateText")]/@title`
+	xpath = xmlpath.MustCompile(path)
+	value, ok = xpath.String(root)
+	if ok {
+		timestamp := get_timestamp_from_string_2(value)
+		tweeter.CreatedAt = timestamp
+	}
+
+	return tweeter
 }
 
-func get_tweets(settings *Settings, q string, max_position string) ([]Tweet, string) {
+func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, string) {
 	var err error
 
 	client := get_http_client(settings, true)
@@ -154,89 +217,4 @@ func get_tweets(settings *Settings, q string, max_position string) ([]Tweet, str
 	}
 
 	return tweets, items_and_max_position.MaxPosition
-}
-
-func get_tweeters(settings *Settings, screen_name string) Tweeter {
-	tweeter := Tweeter{}
-
-	var err error
-
-	client := get_http_client(settings, true)
-
-	url := fmt.Sprintf("https://twitter.com/%s", screen_name)
-
-	request, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	response, err := client.Do(request)
-	if err != nil {
-		panic(err)
-	}
-	defer response.Body.Close()
-
-	body_bytes, err := ioutil.ReadAll(response.Body)
-
-	body_string := string(body_bytes)
-
-	reader := strings.NewReader(body_string)
-	root, err := xmlpath.ParseHTML(reader)
-	if err != nil {
-		panic(err)
-	}
-
-	var path string
-	var xpath *xmlpath.Path
-	var value string
-	var ok bool
-	var integer int
-
-	tweeter.ScreenName = screen_name
-
-	path = `//li[contains(@class, "ProfileNav-item--tweets")]/a/span[contains(@class="ProfileNav-value")]/text()`
-	xpath = xmlpath.MustCompile(path)
-	value, ok = xpath.String(root)
-	if ok {
-		integer, err = strconv.Atoi(value)
-		if err != nil {
-			panic(err)
-		}
-		tweeter.Tweets = integer
-	}
-
-	path = `//li[contains(@class, "ProfileNav-item--followers")]/a/span[contains(@class="ProfileNav-value")]/text()`
-	xpath = xmlpath.MustCompile(path)
-	value, ok = xpath.String(root)
-	if ok {
-		integer, err = strconv.Atoi(value)
-		if err != nil {
-			panic(err)
-		}
-		tweeter.Followers = integer
-	}
-
-	path = `//li[contains(@class, "ProfileNav-item--following")]/a/span[contains(@class="ProfileNav-value")]/text()`
-	xpath = xmlpath.MustCompile(path)
-	value, ok = xpath.String(root)
-	if ok {
-		integer, err = strconv.Atoi(value)
-		if err != nil {
-			panic(err)
-		}
-		tweeter.Following = integer
-	}
-
-	path = `//span[contains(@class, "ProfileHeaderCard-joinDateText")]/@title`
-	xpath = xmlpath.MustCompile(path)
-	value, ok = xpath.String(root)
-	if ok {
-		timestamp, err := time.Parse("3:04 PM - 2 Jan 2006", value)
-		if err != nil {
-			panic(err)
-		}
-		tweeter.CreatedAt = timestamp
-	}
-
-	return tweeter
 }

@@ -88,7 +88,7 @@ func streaming_api_consumer(
 }
 
 func streaming_api_producer(database *sqlx.DB, channels_track chan []string) {
-	programs := get_programs(database)
+	programs := programs_select(database)
 	track := get_track(programs)
 	channels_track <- track
 }
@@ -127,8 +127,8 @@ func streaming_api_consumer_stream(settings *Settings, database *sqlx.DB, track 
 }
 
 func streaming_api_set_tweet(database *sqlx.DB, twitter_tweet *twitter.Tweet) {
-	created_at := get_timestamp_from_string(twitter_tweet.CreatedAt)
-	user_created_at := get_timestamp_from_string(twitter_tweet.User.CreatedAt)
+	created_at := get_timestamp_from_string_1(twitter_tweet.CreatedAt)
+	user_created_at := get_timestamp_from_string_1(twitter_tweet.User.CreatedAt)
 	tweet := &Tweet{
 		Id:                  twitter_tweet.IDStr,
 		Text:                twitter_tweet.Text,
@@ -143,5 +143,5 @@ func streaming_api_set_tweet(database *sqlx.DB, twitter_tweet *twitter.Tweet) {
 		UserFollowing:       &twitter_tweet.User.FriendsCount,
 		UserCreatedAt:       &user_created_at,
 	}
-	set_tweet(database, tweet)
+	tweet_insert(database, tweet)
 }
