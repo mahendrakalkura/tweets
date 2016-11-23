@@ -2,12 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	"gopkg.in/xmlpath.v2"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func get_twitter_client(
@@ -59,6 +62,8 @@ func get_tweets(settings *Settings, q string, max_position string) ([]Tweet, str
 	if err != nil {
 		panic(err)
 	}
+
+	defer response.Body.Close()
 
 	var items_and_max_position ItemsAndMaxPosition
 	json.NewDecoder(response.Body).Decode(&items_and_max_position)
@@ -153,5 +158,85 @@ func get_tweets(settings *Settings, q string, max_position string) ([]Tweet, str
 
 func get_tweeters(settings *Settings, screen_name string) Tweeter {
 	tweeter := Tweeter{}
+
+	var err error
+
+	client := get_http_client(settings, true)
+
+	url := fmt.Sprintf("https://twitter.com/%s", screen_name)
+
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	response, err := client.Do(request)
+	if err != nil {
+		panic(err)
+	}
+	defer response.Body.Close()
+
+	body_bytes, err := ioutil.ReadAll(response.Body)
+
+	body_string := string(body_bytes)
+
+	reader := strings.NewReader(body_string)
+	root, err := xmlpath.ParseHTML(reader)
+	if err != nil {
+		panic(err)
+	}
+
+	var path string
+	var xpath *xmlpath.Path
+	var value string
+	var ok bool
+	var integer int
+
+	tweeter.ScreenName = screen_name
+
+	path = `//li[contains(@class, "ProfileNav-item--tweets")]/a/span[contains(@class="ProfileNav-value")]/text()`
+	xpath = xmlpath.MustCompile(path)
+	value, ok = xpath.String(root)
+	if ok {
+		integer, err = strconv.Atoi(value)
+		if err != nil {
+			panic(err)
+		}
+		tweeter.Tweets = integer
+	}
+
+	path = `//li[contains(@class, "ProfileNav-item--followers")]/a/span[contains(@class="ProfileNav-value")]/text()`
+	xpath = xmlpath.MustCompile(path)
+	value, ok = xpath.String(root)
+	if ok {
+		integer, err = strconv.Atoi(value)
+		if err != nil {
+			panic(err)
+		}
+		tweeter.Followers = integer
+	}
+
+	path = `//li[contains(@class, "ProfileNav-item--following")]/a/span[contains(@class="ProfileNav-value")]/text()`
+	xpath = xmlpath.MustCompile(path)
+	value, ok = xpath.String(root)
+	if ok {
+		integer, err = strconv.Atoi(value)
+		if err != nil {
+			panic(err)
+		}
+		tweeter.Following = integer
+	}
+
+	path = `//span[contains(@class, "ProfileHeaderCard-joinDateText")]/@title`
+	xpath = xmlpath.MustCompile(path)
+	value, ok = xpath.String(root)
+	if ok {
+		timestamp, err := time.Parse("3:04 PM - 2 Jan 2006", value)
+		if err != nil {
+			panic(err)
+		}
+		tweeter.CreatedAt = timestamp
+	}
+
 	return tweeter
 }
