@@ -95,14 +95,14 @@ func tweeter_fetch(settings *Settings, screen_name string) *Tweeter {
 	return tweeter
 }
 
-func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, string) {
+func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, string, error) {
 	var err error
 
 	client := get_http_client(settings, true)
 
 	request, err := http.NewRequest("GET", "https://twitter.com/i/search/timeline", nil)
 	if err != nil {
-		panic(err)
+		return []Tweet{}, "", err
 	}
 
 	request.Header.Add("accept", "application/json")
@@ -123,7 +123,7 @@ func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, s
 
 	response, err := client.Do(request)
 	if err != nil {
-		panic(err)
+		return []Tweet{}, "", err
 	}
 
 	defer response.Body.Close()
@@ -134,7 +134,7 @@ func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, s
 	reader := strings.NewReader(items_and_max_position.Items)
 	root, err := xmlpath.ParseHTML(reader)
 	if err != nil {
-		panic(err)
+		return []Tweet{}, "", err
 	}
 
 	var path string
@@ -216,5 +216,5 @@ func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, s
 		tweets = append(tweets, tweet)
 	}
 
-	return tweets, items_and_max_position.MaxPosition
+	return tweets, items_and_max_position.MaxPosition, nil
 }

@@ -55,9 +55,13 @@ func rest_api_consumer_tweets(
 		if has_stopped(&program_and_max_position.Program) {
 			continue
 		}
-		tweets, max_position := tweets_fetch(
+		tweets, max_position, err := tweets_fetch(
 			settings, program_and_max_position.Program.Query, program_and_max_position.MaxPosition,
 		)
+		if err != nil {
+			channels_program_and_max_position <- program_and_max_position
+			continue
+		}
 		for _, tweet := range tweets {
 			go rest_api_tweet_insert(database, tweet, channels_screen_name)
 		}
