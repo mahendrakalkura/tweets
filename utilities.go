@@ -6,23 +6,43 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"math/rand"
+	"net/http"
+	"net/url"
 	"regexp"
 	"sort"
 	"strconv"
 	"time"
 )
 
-func get_database(settings_sqlx *SettingsSQLX) *sqlx.DB {
+func get_database(settings *Settings) *sqlx.DB {
 	dsn := fmt.Sprintf(
 		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		settings_sqlx.Hostname,
-		settings_sqlx.Port,
-		settings_sqlx.Username,
-		settings_sqlx.Password,
-		settings_sqlx.Database,
+		settings.SQLX.Hostname,
+		settings.SQLX.Port,
+		settings.SQLX.Username,
+		settings.SQLX.Password,
+		settings.SQLX.Database,
 	)
 	database := sqlx.MustConnect("postgres", dsn)
 	return database
+}
+
+func get_http_client(settings *Settings, with_proxy bool) *http.Client {
+	timeout := time.Duration(30 * time.Second)
+
+	proxy := get_proxy(settings.Proxies.Hostname, settings.Proxies.Ports)
+	proxy_url, err := url.Parse(proxy)
+	if err != nil {
+		panic(err)
+	}
+
+	client := &http.Client{}
+	client.Timeout = timeout
+	if with_proxy {
+		client.Transport = &http.Transport{Proxy: http.ProxyURL(proxy_url)}
+	}
+
+	return client
 }
 
 func get_proxy(hostname string, ports []int) string {
@@ -42,6 +62,23 @@ func get_settings() *Settings {
 		panic(err)
 	}
 	return settings
+}
+
+func get_timestamp_from_integer(value string) time.Time {
+	integer, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	timestamp := time.Unix(integer, 0)
+	return timestamp
+}
+
+func get_timestamp_from_string(value string) time.Time {
+	timestamp, err := time.Parse(time.RubyDate, value)
+	if err != nil {
+		panic(err)
+	}
+	return timestamp
 }
 
 func get_track(programs []Program) []string {
@@ -77,13 +114,15 @@ func get_track(programs []Program) []string {
 	return track
 }
 
-func get_unix(value string) time.Time {
-	integer, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		panic(err)
+func has_stopped(program Program) bool {
+	now := time.Now().UTC()
+	if now.Before(program.BeginningAt) {
+		return false
 	}
-	unix := time.Unix(integer, 0)
-	return unix
+	if now.After(program.EndingAt) {
+		return false
+	}
+	return true
 }
 
 func in_array(value string, array []string) bool {

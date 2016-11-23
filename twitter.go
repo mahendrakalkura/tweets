@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/dghubble/go-twitter/twitter"
 	"github.com/dghubble/oauth1"
 	"gopkg.in/xmlpath.v2"
@@ -61,10 +60,10 @@ func get_tweets(settings *Settings, q string, max_position string) ([]Tweet, str
 		panic(err)
 	}
 
-	var body Body
-	json.NewDecoder(response.Body).Decode(&body)
+	var items_and_max_position ItemsAndMaxPosition
+	json.NewDecoder(response.Body).Decode(&items_and_max_position)
 
-	reader := strings.NewReader(body.Items)
+	reader := strings.NewReader(items_and_max_position.Items)
 	root, err := xmlpath.ParseHTML(reader)
 	if err != nil {
 		panic(err)
@@ -92,18 +91,14 @@ func get_tweets(settings *Settings, q string, max_position string) ([]Tweet, str
 			tweet.Id = value
 		}
 
-		path = ".//div[contains(@class, \"js-tweet-text-container\")]"
-		path += "/p[contains(@class, \"tweet-text\")]"
-		path += "/text()"
+		path = `.//p[contains(@class, "tweet-text")]/text()`
 		xpath = xmlpath.MustCompile(path)
 		value, ok = xpath.String(iter.Node())
 		if ok {
 			tweet.Text = value
 		}
 
-		path = ".//span[contains(@class, \"ProfileTweet-action--retweet\")]"
-		path += "/span[contains(@class, \"ProfileTweet-actionCount\")]"
-		path += "/@data-tweet-stat-count"
+		path = `.//span[contains(@class, "ProfileTweet-action--retweet")]/span/@data-tweet-stat-count`
 		xpath = xmlpath.MustCompile(path)
 		value, ok = xpath.String(iter.Node())
 		if ok {
@@ -114,62 +109,49 @@ func get_tweets(settings *Settings, q string, max_position string) ([]Tweet, str
 			tweet.Retweets = integer
 		}
 
-		path = ".//div[contains(@class, \"stream-item-header\")]"
-		path += "/small[contains(@class, \"time\")]"
-		path += "/a"
-		path += "/span"
-		path += "/@data-time"
+		path = `.//small[contains(@class, "time")]/a/span/@data-time`
 		xpath = xmlpath.MustCompile(path)
 		value, ok = xpath.String(iter.Node())
 		if ok {
-			unix := get_unix(value)
-			tweet.CreatedAt = unix
+			timestamp := get_timestamp_from_integer(value)
+			tweet.CreatedAt = timestamp
 		}
 
-		path = ".//div[contains(@class, \"original-tweet\")]"
-		path += "/@data-user-id"
+		path = `.//div[contains(@class, "original-tweet")]/@data-user-id`
 		xpath = xmlpath.MustCompile(path)
 		value, ok = xpath.String(iter.Node())
 		if ok {
 			tweet.UserId = value
 		}
 
-		path = ".//div[contains(@class, \"original-tweet\")]"
-		path += "/@data-screen-name"
+		path = `.//div[contains(@class, "original-tweet")]/@data-screen-name`
 		xpath = xmlpath.MustCompile(path)
 		value, ok = xpath.String(iter.Node())
 		if ok {
 			tweet.UserScreenName = value
 		}
 
-		path = ".//div[contains(@class, \"original-tweet\")]"
-		path += "/@data-name"
+		path = `.//div[contains(@class, "original-tweet")]/@data-name`
 		xpath = xmlpath.MustCompile(path)
 		value, ok = xpath.String(iter.Node())
 		if ok {
 			tweet.UserName = value
 		}
 
-		path = ".//img[contains(@class, \"avatar js-action-profile-avatar\")]"
-		path += "/@src"
+		path = `.//img[contains(@class, "avatar js-action-profile-avatar")]/@src`
 		xpath = xmlpath.MustCompile(path)
 		value, ok = xpath.String(iter.Node())
 		if ok {
-			tweet.UserProfileImageUrl = value
+			tweet.UserProfileImageURL = value
 		}
-
-		// UserTweets
-
-		// UserFollowers
-
-		// UserFollowing
-
-		// UserCreatedAt
-
-		fmt.Println(tweet.Id)
 
 		tweets = append(tweets, tweet)
 	}
 
-	return tweets, body.MaxPosition
+	return tweets, items_and_max_position.MaxPosition
+}
+
+func get_tweeters(settings *Settings, screen_name string) Tweeter {
+	tweeter := Tweeter{}
+	return tweeter
 }

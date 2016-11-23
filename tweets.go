@@ -13,11 +13,13 @@ func main() {
 
 	settings = get_settings()
 
+	database := get_database(settings)
+
 	if *action == "streaming-api" {
-		streaming_api(settings)
+		streaming_api(settings, database)
 	}
 
 	if *action == "rest-api" {
-		rest_api(settings)
+		rest_api(settings, database)
 	}
 }

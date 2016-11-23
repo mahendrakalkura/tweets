@@ -36,24 +36,37 @@ type Program struct {
 	EndingAt    time.Time `db:"ending_at"`
 }
 
-type Body struct {
+type ProgramAndMaxPosition struct {
+	Program     Program
+	MaxPosition string
+}
+
+type ItemsAndMaxPosition struct {
 	Items       string `json:"items_html"`
 	MaxPosition string `json:"min_position"`
 }
 
+type Tweeter struct {
+	ScreenName string    `db:"twitter_user_screen_name"`
+	Tweets     int       `db:"twitter_user_tweets"`
+	Followers  int       `db:"twitter_user_followers"`
+	Following  int       `db:"twitter_user_following"`
+	CreatedAt  time.Time `db:"twitter_user_created_at"`
+}
+
 type Tweet struct {
-	Id                  string
-	Text                string
-	Retweets            int
-	CreatedAt           time.Time
-	UserId              string
-	UserScreenName      string
-	UserName            string
-	UserProfileImageUrl string
-	UserTweets          int
-	UserFollowers       int
-	UserFollowing       int
-	UserCreatedAt       time.Time
+	Id                  string     `db:"twitter_id"`
+	Text                string     `db:"twitter_text"`
+	Retweets            int        `db:"twitter_retweets"`
+	CreatedAt           time.Time  `db:"twitter_created_at"`
+	UserId              string     `db:"twitter_user_id"`
+	UserScreenName      string     `db:"twitter_user_screen_name"`
+	UserName            string     `db:"twitter_user_name"`
+	UserProfileImageURL string     `db:"twitter_user_profile_image_url"`
+	UserTweets          *int       `db:"twitter_user_tweets"`
+	UserFollowers       *int       `db:"twitter_user_followers"`
+	UserFollowing       *int       `db:"twitter_user_following"`
+	UserCreatedAt       *time.Time `db:"twitter_user_created_at"`
 }
 
 type ByLengthAndValue []string
