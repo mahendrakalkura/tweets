@@ -14,5 +14,7 @@ How to run?
 
 ```
 $ cd tweets
-$ go run tweets.go
+$ go build
+$ ./tweets --action=streaming-api
+$ ./tweets --action=rest-api
 ```
