@@ -108,7 +108,17 @@ func rest_api_producer(
 ) {
 	fmt.Println("rest_api_producer() - Start")
 
-	programs := programs_select(database)
+	rest_api_producer_programs(database, channels_program_and_max_position)
+	rest_api_producer_screen_names(database, channels_screen_name)
+
+	fmt.Println("rest_api_producer() - Stop")
+}
+
+func rest_api_producer_programs(database *sqlx.DB, channels_program_and_max_position chan ProgramAndMaxPosition) {
+	programs, err := programs_select(database)
+	if err != nil {
+		return
+	}
 	for _, program := range programs {
 		var program_and_max_position = ProgramAndMaxPosition{
 			Program:     program,
@@ -116,13 +126,16 @@ func rest_api_producer(
 		}
 		channels_program_and_max_position <- program_and_max_position
 	}
+}
 
-	screen_names := screen_names_select(database)
+func rest_api_producer_screen_names(database *sqlx.DB, channels_screen_name chan string) {
+	screen_names, err := screen_names_select(database)
+	if err != nil {
+		return
+	}
 	for _, screen_name := range screen_names {
 		channels_screen_name <- screen_name
 	}
-
-	fmt.Println("rest_api_producer() - Stop")
 }
 
 func rest_api_tweet_insert(database *sqlx.DB, tweet Tweet, channels_screen_name chan string) {
