@@ -4,7 +4,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func programs_select(database *sqlx.DB) ([]Program, error) {
+func programs_select(database *sqlx.DB) []Program {
 	var programs []Program
 	query := `
     SELECT programs.query, channels_programs.beginning_at, channels_programs.ending_at
@@ -16,10 +16,13 @@ func programs_select(database *sqlx.DB) ([]Program, error) {
         channels_programs.ending_at >= TIMEZONE('UTC', NOW())
     `
 	err := database.Select(&programs, query)
-	return programs, err
+	if err != nil {
+		panic(err)
+	}
+	return programs
 }
 
-func screen_names_select(database *sqlx.DB) ([]string, error) {
+func screen_names_select(database *sqlx.DB) []string {
 	var screen_names []string
 	query := `
     SELECT DISTINCT twitter_user_screen_name
@@ -34,7 +37,10 @@ func screen_names_select(database *sqlx.DB) ([]string, error) {
         twitter_user_created_at IS NOT NULL
     `
 	err := database.Select(&screen_names, query)
-	return screen_names, err
+	if err != nil {
+		panic(err)
+	}
+	return screen_names
 }
 
 func tweet_insert(database *sqlx.DB, tweet *Tweet) {

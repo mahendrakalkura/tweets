@@ -88,10 +88,7 @@ func streaming_api_consumer(
 }
 
 func streaming_api_producer(database *sqlx.DB, channels_track chan []string) {
-	programs, err := programs_select(database)
-	if err != nil {
-		return
-	}
+	programs := programs_select(database)
 	track := get_track(programs)
 	channels_track <- track
 }
