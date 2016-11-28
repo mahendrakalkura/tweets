@@ -91,9 +91,7 @@ func streaming_api_producer(database *sqlx.DB, channels_track chan []string) {
 	fmt.Println("streaming_api_producer() - Start")
 
 	programs := programs_select(database)
-	fmt.Println(programs)
 	track := get_track(programs)
-	fmt.Println(track)
 	channels_track <- track
 
 	fmt.Println("streaming_api_producer() - Stop")
