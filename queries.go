@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/jmoiron/sqlx"
+	"strings"
 )
 
 func programs_select(database *sqlx.DB) []Program {
@@ -44,6 +45,7 @@ func screen_names_select(database *sqlx.DB) []string {
 }
 
 func tweet_insert(database *sqlx.DB, tweet *Tweet) {
+	tweet.Text = strings.Replace(tweet.Text, "#", "HASHTAG", -1)
 	query := `
     INSERT INTO tweets
         (
