@@ -89,7 +89,7 @@ func tweeter_fetch(settings *Settings, screen_name string) *Tweeter {
 	value, ok = xpath.String(root)
 	if ok {
 		timestamp := get_timestamp_from_string_2(value)
-		tweeter.CreatedAt = timestamp
+		tweeter.Timestamp = timestamp
 	}
 
 	return tweeter
@@ -108,6 +108,8 @@ func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, s
 	request.Header.Add("accept", "application/json")
 	request.Header.Add("x-push-state-request", "true")
 	request.Header.Add("x-requested-with", "XMLHttpRequest")
+
+	q = strings.Replace(q, "HASHTAG", "#", -1)
 
 	query := request.URL.Query()
 	query.Add("composed_count", "0")
@@ -182,7 +184,7 @@ func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, s
 		value, ok = xpath.String(iter.Node())
 		if ok {
 			timestamp := get_timestamp_from_integer(value)
-			tweet.CreatedAt = timestamp
+			tweet.Timestamp = timestamp
 		}
 
 		path = `.//div[contains(@class, "original-tweet")]/@data-user-id`

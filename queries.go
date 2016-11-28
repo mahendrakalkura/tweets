@@ -35,7 +35,7 @@ func screen_names_select(database *sqlx.DB) []string {
         OR
         twitter_user_following IS NOT NULL
         OR
-        twitter_user_created_at IS NOT NULL
+        twitter_user_timestamp IS NOT NULL
     `
 	err := database.Select(&screen_names, query)
 	if err != nil {
@@ -52,7 +52,7 @@ func tweet_insert(database *sqlx.DB, tweet *Tweet) {
             twitter_id,
             twitter_text,
             twitter_retweets,
-            twitter_created_at,
+            twitter_timestamp,
             twitter_user_id,
             twitter_user_screen_name,
             twitter_user_name,
@@ -60,14 +60,14 @@ func tweet_insert(database *sqlx.DB, tweet *Tweet) {
             twitter_user_tweets,
             twitter_user_followers,
             twitter_user_following,
-            twitter_user_created_at
+            twitter_user_timestamp
         )
         VALUES
         (
             :twitter_id,
             :twitter_text,
             :twitter_retweets,
-            :twitter_created_at,
+            :twitter_timestamp,
             :twitter_user_id,
             :twitter_user_screen_name,
             :twitter_user_name,
@@ -75,7 +75,7 @@ func tweet_insert(database *sqlx.DB, tweet *Tweet) {
             :twitter_user_tweets,
             :twitter_user_followers,
             :twitter_user_following,
-            :twitter_user_created_at
+            :twitter_user_timestamp
         )
     `
 	database.NamedExec(query, tweet)
@@ -89,7 +89,7 @@ func tweeter_select(database *sqlx.DB, screen_name string) (*Tweeter, error) {
         twitter_user_tweets,
         twitter_user_followers,
         twitter_user_following,
-        twitter_user_created_at
+        twitter_user_timestamp
     FROM tweets
     WHERE
         twitter_user_screen_name = ?
@@ -100,7 +100,7 @@ func tweeter_select(database *sqlx.DB, screen_name string) (*Tweeter, error) {
         AND
         twitter_user_following IS NOT NULL
         AND
-        twitter_user_created_at IS NOT NULL
+        twitter_user_timestamp IS NOT NULL
     `
 	err := database.Get(&tweeter, query, screen_name)
 	return &tweeter, err
@@ -113,7 +113,7 @@ func tweeter_update(database *sqlx.DB, tweeter *Tweeter) {
         twitter_user_tweets = :tweets,
         twitter_user_followers = :followers,
         twitter_user_following = :following,
-        twitter_user_created_at = :created_at
+        twitter_user_timestamp = :timestamp
     WHERE twitter_user_screen_name = :screen_name
     `
 	database.NamedExec(query, tweeter)

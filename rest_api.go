@@ -92,7 +92,7 @@ func rest_api_consumer_tweeters(settings *Settings, database *sqlx.DB, channels_
 		if &tweeter.Following == nil {
 			continue
 		}
-		if &tweeter.CreatedAt == nil {
+		if &tweeter.Timestamp == nil {
 			continue
 		}
 		go tweeter_update(database, tweeter)

@@ -88,9 +88,15 @@ func streaming_api_consumer(
 }
 
 func streaming_api_producer(database *sqlx.DB, channels_track chan []string) {
+	fmt.Println("streaming_api_producer() - Start")
+
 	programs := programs_select(database)
+	fmt.Println(programs)
 	track := get_track(programs)
+	fmt.Println(track)
 	channels_track <- track
+
+	fmt.Println("streaming_api_producer() - Stop")
 }
 
 func streaming_api_consumer_stream(settings *Settings, database *sqlx.DB, track []string, channels_stop chan bool) {
@@ -127,13 +133,13 @@ func streaming_api_consumer_stream(settings *Settings, database *sqlx.DB, track 
 }
 
 func streaming_api_set_tweet(database *sqlx.DB, twitter_tweet *twitter.Tweet) {
-	created_at := get_timestamp_from_string_1(twitter_tweet.CreatedAt)
-	user_created_at := get_timestamp_from_string_1(twitter_tweet.User.CreatedAt)
+	timestamp := get_timestamp_from_string_1(twitter_tweet.CreatedAt)
+	user_timestamp := get_timestamp_from_string_1(twitter_tweet.User.CreatedAt)
 	tweet := &Tweet{
 		Id:                  twitter_tweet.IDStr,
 		Text:                twitter_tweet.Text,
 		Retweets:            twitter_tweet.RetweetCount,
-		CreatedAt:           created_at,
+		Timestamp:           timestamp,
 		UserId:              twitter_tweet.User.IDStr,
 		UserScreenName:      twitter_tweet.User.ScreenName,
 		UserName:            twitter_tweet.User.Name,
@@ -141,7 +147,7 @@ func streaming_api_set_tweet(database *sqlx.DB, twitter_tweet *twitter.Tweet) {
 		UserTweets:          &twitter_tweet.User.StatusesCount,
 		UserFollowers:       &twitter_tweet.User.FollowersCount,
 		UserFollowing:       &twitter_tweet.User.FriendsCount,
-		UserCreatedAt:       &user_created_at,
+		UserTimestamp:       &user_timestamp,
 	}
 	tweet_insert(database, tweet)
 }

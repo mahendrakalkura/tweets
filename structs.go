@@ -70,7 +70,7 @@ type Tweet struct {
 	Id                  string     `db:"twitter_id"`
 	Text                string     `db:"twitter_text"`
 	Retweets            int        `db:"twitter_retweets"`
-	CreatedAt           time.Time  `db:"twitter_created_at"`
+	Timestamp           time.Time  `db:"twitter_timestamp"`
 	UserId              string     `db:"twitter_user_id"`
 	UserScreenName      string     `db:"twitter_user_screen_name"`
 	UserName            string     `db:"twitter_user_name"`
@@ -78,7 +78,7 @@ type Tweet struct {
 	UserTweets          *int       `db:"twitter_user_tweets"`
 	UserFollowers       *int       `db:"twitter_user_followers"`
 	UserFollowing       *int       `db:"twitter_user_following"`
-	UserCreatedAt       *time.Time `db:"twitter_user_created_at"`
+	UserTimestamp       *time.Time `db:"twitter_user_timestamp"`
 }
 
 type Tweeter struct {
@@ -86,5 +86,5 @@ type Tweeter struct {
 	Tweets     int       `db:"twitter_user_tweets"`
 	Followers  int       `db:"twitter_user_followers"`
 	Following  int       `db:"twitter_user_following"`
-	CreatedAt  time.Time `db:"twitter_user_created_at"`
+	Timestamp  time.Time `db:"twitter_user_timestamp"`
 }
