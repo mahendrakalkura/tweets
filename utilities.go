@@ -13,7 +13,6 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -111,9 +110,8 @@ func get_track(programs []Program) []string {
 	var track []string
 	re := regexp.MustCompile("\\w+")
 	for _, program := range programs {
-		matches := re.FindAllString(program.Query, -1)
+		matches := re.FindAllString(program.QueriesTwitter, -1)
 		for _, match := range matches {
-			match = strings.Replace(match, "HASHTAG", "#", -1)
 			if len(match) < 3 {
 				continue
 			}

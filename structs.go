@@ -30,9 +30,10 @@ type ItemsAndMaxPosition struct {
 }
 
 type Program struct {
-	Query       string    `db:"query"`
-	BeginningAt time.Time `db:"beginning_at"`
-	EndingAt    time.Time `db:"ending_at"`
+	QueriesTwitter string    `db:"queries_twitter"`
+	QueriesAsyncpg string    `db:"queries_asyncpg"`
+	BeginningAt    time.Time `db:"beginning_at"`
+	EndingAt       time.Time `db:"ending_at"`
 }
 
 type ProgramAndMaxPosition struct {

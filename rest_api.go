@@ -56,7 +56,7 @@ func rest_api_consumer_tweets(
 			continue
 		}
 		tweets, max_position, err := tweets_fetch(
-			settings, program_and_max_position.Program.Query, program_and_max_position.MaxPosition,
+			settings, program_and_max_position.Program.QueriesTwitter, program_and_max_position.MaxPosition,
 		)
 		if err != nil {
 			channels_program_and_max_position <- program_and_max_position

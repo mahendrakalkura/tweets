@@ -8,7 +8,7 @@ import (
 func programs_select(database *sqlx.DB) []Program {
 	var programs []Program
 	query := `
-    SELECT programs.query, channels_programs.beginning_at, channels_programs.ending_at
+    SELECT programs.queries_twitter, channels_programs.beginning_at, channels_programs.ending_at
     FROM programs
     INNER JOIN channels_programs ON channels_programs.program_id = programs.id
     WHERE
