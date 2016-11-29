@@ -109,8 +109,6 @@ func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, s
 	request.Header.Add("x-push-state-request", "true")
 	request.Header.Add("x-requested-with", "XMLHttpRequest")
 
-	q = strings.Replace(q, "HASHTAG", "#", -1)
-
 	query := request.URL.Query()
 	query.Add("composed_count", "0")
 	query.Add("include_available_features", "1")
