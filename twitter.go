@@ -2,98 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"gopkg.in/xmlpath.v2"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
 )
-
-func tweeter_fetch(settings *Settings, screen_name string) *Tweeter {
-	tweeter := &Tweeter{}
-
-	var err error
-
-	client := get_http_client(settings, true)
-
-	url := fmt.Sprintf("https://twitter.com/%s", screen_name)
-
-	request, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		panic(err)
-	}
-
-	response, err := client.Do(request)
-	if err != nil {
-		panic(err)
-	}
-	defer response.Body.Close()
-
-	body_bytes, err := ioutil.ReadAll(response.Body)
-
-	body_string := string(body_bytes)
-
-	reader := strings.NewReader(body_string)
-	root, err := xmlpath.ParseHTML(reader)
-	if err != nil {
-		panic(err)
-	}
-
-	var path string
-	var xpath *xmlpath.Path
-	var value string
-	var ok bool
-	var integer int
-
-	tweeter.ScreenName = screen_name
-
-	path = `//li[contains(@class, "ProfileNav-item--tweets")]/a/@title`
-	xpath = xmlpath.MustCompile(path)
-	value, ok = xpath.String(root)
-	if ok {
-		value = get_number(value)
-		integer, err = strconv.Atoi(value)
-		if err != nil {
-			panic(err)
-		}
-		tweeter.Tweets = integer
-	}
-
-	path = `//li[contains(@class, "ProfileNav-item--followers")]/a/@title`
-	xpath = xmlpath.MustCompile(path)
-	value, ok = xpath.String(root)
-	if ok {
-		value = get_number(value)
-		integer, err = strconv.Atoi(value)
-		if err != nil {
-			panic(err)
-		}
-		tweeter.Followers = integer
-	}
-
-	path = `//li[contains(@class, "ProfileNav-item--following")]/a/@title`
-	xpath = xmlpath.MustCompile(path)
-	value, ok = xpath.String(root)
-	if ok {
-		value = get_number(value)
-		integer, err = strconv.Atoi(value)
-		if err != nil {
-			panic(err)
-		}
-		tweeter.Following = integer
-	}
-
-	path = `//span[contains(@class, "ProfileHeaderCard-joinDateText")]/@title`
-	xpath = xmlpath.MustCompile(path)
-	value, ok = xpath.String(root)
-	if ok {
-		timestamp := get_timestamp_from_string_2(value)
-		tweeter.Timestamp = timestamp
-	}
-
-	return tweeter
-}
 
 func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, string, error) {
 	var err error
@@ -152,12 +65,22 @@ func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, s
 	for iter.Next() {
 		tweet = Tweet{}
 
+		path = `.//small[contains(@class, "time")]/a/span/@data-time`
+		xpath = xmlpath.MustCompile(path)
+		value, ok = xpath.String(iter.Node())
+		if ok {
+			created_at := get_timestamp_from_integer(value)
+			tweet.CreatedAt = created_at
+		}
+
 		path = `.//@data-item-id`
 		xpath = xmlpath.MustCompile(path)
 		value, ok = xpath.String(iter.Node())
 		if ok {
 			tweet.Id = value
 		}
+
+		tweet.Source = ""
 
 		path = `.//p[contains(@class, "tweet-text")]/text()`
 		xpath = xmlpath.MustCompile(path)
@@ -177,26 +100,11 @@ func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, s
 			tweet.Retweets = integer
 		}
 
-		path = `.//small[contains(@class, "time")]/a/span/@data-time`
-		xpath = xmlpath.MustCompile(path)
-		value, ok = xpath.String(iter.Node())
-		if ok {
-			timestamp := get_timestamp_from_integer(value)
-			tweet.Timestamp = timestamp
-		}
-
 		path = `.//div[contains(@class, "original-tweet")]/@data-user-id`
 		xpath = xmlpath.MustCompile(path)
 		value, ok = xpath.String(iter.Node())
 		if ok {
 			tweet.UserId = value
-		}
-
-		path = `.//div[contains(@class, "original-tweet")]/@data-screen-name`
-		xpath = xmlpath.MustCompile(path)
-		value, ok = xpath.String(iter.Node())
-		if ok {
-			tweet.UserScreenName = value
 		}
 
 		path = `.//div[contains(@class, "original-tweet")]/@data-name`
@@ -211,6 +119,13 @@ func tweets_fetch(settings *Settings, q string, max_position string) ([]Tweet, s
 		value, ok = xpath.String(iter.Node())
 		if ok {
 			tweet.UserProfileImageURL = value
+		}
+
+		path = `.//div[contains(@class, "original-tweet")]/@data-screen-name`
+		xpath = xmlpath.MustCompile(path)
+		value, ok = xpath.String(iter.Node())
+		if ok {
+			tweet.UserScreenName = value
 		}
 
 		tweets = append(tweets, tweet)

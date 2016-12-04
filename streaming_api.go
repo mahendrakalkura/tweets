@@ -131,21 +131,17 @@ func streaming_api_consumer_stream(settings *Settings, database *sqlx.DB, track 
 }
 
 func streaming_api_set_tweet(database *sqlx.DB, twitter_tweet *twitter.Tweet) {
-	timestamp := get_timestamp_from_string_1(twitter_tweet.CreatedAt)
-	user_timestamp := get_timestamp_from_string_1(twitter_tweet.User.CreatedAt)
+	created_at := get_timestamp_from_string_1(twitter_tweet.CreatedAt)
 	tweet := &Tweet{
+		CreatedAt:           created_at,
 		Id:                  twitter_tweet.IDStr,
+		Source:              twitter_tweet.Source,
 		Text:                twitter_tweet.Text,
 		Retweets:            twitter_tweet.RetweetCount,
-		Timestamp:           timestamp,
 		UserId:              twitter_tweet.User.IDStr,
-		UserScreenName:      twitter_tweet.User.ScreenName,
 		UserName:            twitter_tweet.User.Name,
 		UserProfileImageURL: twitter_tweet.User.ProfileImageURL,
-		UserTweets:          &twitter_tweet.User.StatusesCount,
-		UserFollowers:       &twitter_tweet.User.FollowersCount,
-		UserFollowing:       &twitter_tweet.User.FriendsCount,
-		UserTimestamp:       &user_timestamp,
+		UserScreenName:      twitter_tweet.User.ScreenName,
 	}
 	tweet_insert(database, tweet)
 }

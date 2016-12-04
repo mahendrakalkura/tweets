@@ -30,10 +30,9 @@ type ItemsAndMaxPosition struct {
 }
 
 type Program struct {
-	QueriesTwitter string    `db:"queries_twitter"`
-	QueriesAsyncpg string    `db:"queries_asyncpg"`
-	BeginningAt    time.Time `db:"beginning_at"`
-	EndingAt       time.Time `db:"ending_at"`
+	Query       string    `db:"query"`
+	BeginningAt time.Time `db:"beginning_at"`
+	EndingAt    time.Time `db:"ending_at"`
 }
 
 type ProgramAndMaxPosition struct {
@@ -68,24 +67,13 @@ type SettingsTwitter struct {
 }
 
 type Tweet struct {
-	Id                  string     `db:"twitter_id"`
-	Text                string     `db:"twitter_text"`
-	Retweets            int        `db:"twitter_retweets"`
-	Timestamp           time.Time  `db:"twitter_timestamp"`
-	UserId              string     `db:"twitter_user_id"`
-	UserScreenName      string     `db:"twitter_user_screen_name"`
-	UserName            string     `db:"twitter_user_name"`
-	UserProfileImageURL string     `db:"twitter_user_profile_image_url"`
-	UserTweets          *int       `db:"twitter_user_tweets"`
-	UserFollowers       *int       `db:"twitter_user_followers"`
-	UserFollowing       *int       `db:"twitter_user_following"`
-	UserTimestamp       *time.Time `db:"twitter_user_timestamp"`
-}
-
-type Tweeter struct {
-	ScreenName string    `db:"twitter_user_screen_name"`
-	Tweets     int       `db:"twitter_user_tweets"`
-	Followers  int       `db:"twitter_user_followers"`
-	Following  int       `db:"twitter_user_following"`
-	Timestamp  time.Time `db:"twitter_user_timestamp"`
+	CreatedAt           time.Time `db:"twitter_created_at"`
+	Id                  string    `db:"twitter_id"`
+	Source              string    `db:"twitter_source"`
+	Text                string    `db:"twitter_text"`
+	Retweets            int       `db:"twitter_retweets"`
+	UserId              string    `db:"twitter_user_id"`
+	UserName            string    `db:"twitter_user_name"`
+	UserProfileImageURL string    `db:"twitter_user_profile_image_url"`
+	UserScreenName      string    `db:"twitter_user_screen_name"`
 }

@@ -110,7 +110,7 @@ func get_track(programs []Program) []string {
 	var track []string
 	re := regexp.MustCompile("\\w+")
 	for _, program := range programs {
-		matches := re.FindAllString(program.QueriesTwitter, -1)
+		matches := re.FindAllString(program.Query, -1)
 		for _, match := range matches {
 			if len(match) < 3 {
 				continue
