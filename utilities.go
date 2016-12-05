@@ -108,10 +108,16 @@ func get_timestamp_from_string_2(value string) time.Time {
 
 func get_track(programs []Program) []string {
 	var track []string
-	re := regexp.MustCompile("\\w+")
+	re := regexp.MustCompile("[#]?\\w+")
 	for _, program := range programs {
 		matches := re.FindAllString(program.Query, -1)
 		for _, match := range matches {
+			if match == "OR" {
+				continue
+			}
+			if match == "AND" {
+				continue
+			}
 			if len(match) < 3 {
 				continue
 			}
