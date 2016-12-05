@@ -12,6 +12,8 @@ func programs_select(database *sqlx.DB) []Program {
     FROM programs
     INNER JOIN channels_programs ON channels_programs.program_id = programs.id
     WHERE
+        programs.status = TRUE
+        AND
         channels_programs.beginning_at <= TIMEZONE('UTC', NOW())
         AND
         channels_programs.ending_at >= TIMEZONE('UTC', NOW())
