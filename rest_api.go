@@ -57,7 +57,7 @@ func rest_api_consumer(
 			continue
 		}
 		for _, tweet := range tweets {
-			go rest_api_tweet_insert(database, tweet)
+			rest_api_tweet_insert(database, tweet)
 		}
 		if max_position != "" {
 			var program_and_max_position = ProgramAndMaxPosition{

@@ -116,7 +116,7 @@ func streaming_api_consumer_stream(settings *Settings, database *sqlx.DB, track 
 
 	demux := twitter.NewSwitchDemux()
 	demux.Tweet = func(twitter_tweet *twitter.Tweet) {
-		go streaming_api_set_tweet(database, twitter_tweet)
+		streaming_api_set_tweet(database, twitter_tweet)
 	}
 
 	go demux.HandleChan(stream.Messages)
