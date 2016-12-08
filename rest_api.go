@@ -74,6 +74,8 @@ func rest_api_consumer(
 func rest_api_producer(database *sqlx.DB, channels_program_and_max_position chan ProgramAndMaxPosition) {
 	fmt.Println("rest_api_producer() - Start")
 
+	tweets_delete(database)
+
 	programs := programs_select(database)
 	for _, program := range programs {
 		var program_and_max_position = ProgramAndMaxPosition{

@@ -90,6 +90,8 @@ func streaming_api_consumer(
 func streaming_api_producer(database *sqlx.DB, channels_track chan []string) {
 	fmt.Println("streaming_api_producer() - Start")
 
+	tweets_delete(database)
+
 	programs := programs_select(database)
 	track := get_track(programs)
 	channels_track <- track

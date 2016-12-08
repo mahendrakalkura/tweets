@@ -27,7 +27,7 @@ func programs_select(database *sqlx.DB) []Program {
 
 func tweet_insert(database *sqlx.DB, tweet *Tweet) {
 	tweet.Text = strings.Replace(tweet.Text, "#", "HASHTAG", -1)
-	query := `
+    query := `
     INSERT INTO tweets
         (
             twitter_created_at,
@@ -53,5 +53,12 @@ func tweet_insert(database *sqlx.DB, tweet *Tweet) {
             :twitter_user_screen_name
         )
     `
-	database.NamedExec(query, tweet)
+    database.NamedExec(query, tweet)
+}
+
+func tweets_delete(database *sqlx.DB) {
+    query := `
+    DELETE FROM tweets WHERE twitter_created_at < TIMEZONE('UTC',NOW()) - INTERVAL '1 DAY';
+    `
+    database.Exec(query)
 }
